@@ -20,6 +20,9 @@ function getQuery(q) {
   })
 }
 
+// const r = await getQuery("DESCRIBE TAB_Type");
+// console.log(r);
+
 const qSites = `SELECT Id, Site_Id, Name, Country, Latitude, Longitude
 FROM TAB_Site
 WHERE projects LIKE '%MICROSCOPE%' OR Site_Id IN ("THR", "YAB", "MTR", "GLE", "MAK", "HBU", "MOM", "BRM", "EML", "GRS", 
@@ -29,7 +32,7 @@ const sites = await getQuery(qSites);
 const qInds = "SELECT Id, Full_Individual_Id, Site, C14_Calibrated_From, C14_Calibrated_To, Archaeological_Date_From, Archaeological_Date_To FROM TAB_Individual WHERE projects LIKE '%MICROSCOPE%'";
 const individuals = await getQuery(qInds);
 
-const qSamples = "SELECT S.Id, S.Full_Sample_Id, S.Individual, S.Experiment_Date, T.Name FROM TAB_Sample AS S INNER JOIN TAB_Type_Group AS T ON S.Type_Group = T.Id WHERE S.projects LIKE '%MICROSCOPE%'";
+const qSamples = "SELECT S.Id, S.Full_Sample_Id, S.Individual, S.Experiment_Date, TG.Name AS TypeGroup, T.Name AS Type FROM TAB_Sample AS S INNER JOIN TAB_Type_Group AS TG ON S.Type_Group = TG.Id INNER JOIN TAB_Type AS T ON S.Type = T.Id WHERE S.projects LIKE '%MICROSCOPE%'";
 const samples = await getQuery(qSamples);
 
 const qExtracts = "SELECT Id, Full_Extract_Id, Sample, Experiment_Date FROM TAB_Extract WHERE projects LIKE '%MICROSCOPE%'";
