@@ -104,6 +104,7 @@ const qSeqs = `SELECT
   LEFT JOIN libraries          AS L  ON C.library  = L.Id
   LEFT JOIN extracts           AS E  ON L.extract  = E.Id
   LEFT JOIN samples            AS Sa ON E.sample   = Sa.Id
+  ${filter_cond_samples}
   GROUP BY Se.Full_Sequencing_Id`
 const seq_table = sql([qSeqs]);
 ```
