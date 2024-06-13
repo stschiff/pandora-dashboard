@@ -32,7 +32,9 @@ const sites_searched = view(Inputs.search(sites_table, {placeholder: "Search sit
 ```
 
 ```js
-const selected_sites = view(Inputs.table(sites_searched));
+const selected_sites = view(Inputs.table(sites_searched, {
+  columns: ["Site_Id", "Site", "Country", "NrIndividuals", "NrSamples", "NrExtracts", "NrLibraries", "NrCaptures", "NrSequencings"]
+}));
 ```
 
 ## Individuals
@@ -61,8 +63,11 @@ const ind_table = sql([qInds]);
 ```
 
 ```js
-const selected_individuals = view(Inputs.table(ind_table));
+const selected_individuals = view(Inputs.table(ind_table, {
+  columns: ["Individual", "Site", "Country", "NrSamples", "NrExtracts", "NrLibraries", "NrCaptures", "NrSequencings"]
+}));
 ```
+Selected ${selected_individuals.length} individuals.
 
 ## Samples
 ```js 
@@ -90,8 +95,15 @@ const sample_table = sql([qSamples]);
 ```
 
 ```js
-const selected_samples = view(Inputs.table(sample_table));
+const selected_samples = view(Inputs.table(sample_table, {
+  columns: ["Sample", "Date", "SourceGroup", "Source", "NrExtracts", "NrLibraries", "NrCaptures", "NrSequencings"],
+  format: {
+    "Date": (d) => d.substring(0, 10)
+  }
+}));
 ```
+
+Selected ${selected_samples.length} samples.
 
 ## Sequencings
 ```js 
@@ -110,5 +122,11 @@ const seq_table = sql([qSeqs]);
 ```
 
 ```js
-view(Inputs.table(seq_table));
+const selected_seqs = view(Inputs.table(seq_table, {
+  format: {
+    "Date": (d) => d.substring(0, 10)
+  }
+}));
 ```
+
+Showing ${seq_table.numRows} sequencings
