@@ -25,14 +25,27 @@ function getQuery(q) {
 
 const qSites = `SELECT Id, Site_Id, Name, Country, Latitude, Longitude
 FROM TAB_Site
-WHERE projects LIKE '%MICROSCOPE%' OR Site_Id IN ("THR", "YAB", "MTR", "GLE", "MAK", "HBU", "MOM", "BRM", "EML", "GRS", 
-  "AGA", "DSM", "FZH", "IDB", "LLD")`;
+WHERE
+  projects LIKE '%MICROSCOPE%' OR
+  tags     LIKE '%MICROSCOPE%' OR
+  Site_Id  IN   ("THR", "YAB", "MTR", "GLE", "MAK", "HBU", "MOM", "BRM", "EML", "GRS", "AGA", "DSM", "FZH", "IDB", "LLD")`;
 const sites = await getQuery(qSites);
 
-const qInds = "SELECT Id, Full_Individual_Id, Site, C14_Calibrated_From, C14_Calibrated_To, Archaeological_Date_From, Archaeological_Date_To FROM TAB_Individual WHERE projects LIKE '%MICROSCOPE%'";
+const qInds = `SELECT I.Id, I.Full_Individual_Id, I.Site, I.C14_Calibrated_From, I.C14_Calibrated_To, I.Archaeological_Date_From, I.Archaeological_Date_To
+FROM       TAB_Individual AS I
+INNER JOIN TAB_Site       AS S ON I.Site = S.Id
+WHERE
+  projects LIKE '%MICROSCOPE%' OR
+  I.tags   LIKE '%MICROSCOPE%' OR
+  S.tags   LIKE '%MICROSCOPE%'`;
 const individuals = await getQuery(qInds);
 
-const qSamples = "SELECT S.Id, S.Full_Sample_Id, S.Individual, S.Experiment_Date, TG.Name AS TypeGroup, T.Name AS Type FROM TAB_Sample AS S INNER JOIN TAB_Type_Group AS TG ON S.Type_Group = TG.Id INNER JOIN TAB_Type AS T ON S.Type = T.Id WHERE S.projects LIKE '%MICROSCOPE%'";
+const qSamples = `SELECT S.Id, S.Full_Sample_Id, S.Individual, S.Experiment_Date, TG.Name AS TypeGroup, T.Name AS Type
+FROM       TAB_Sample      AS S
+INNER JOIN TAB_Type_Group  AS TG ON S.Type_Group = TG.Id
+INNER JOIN TAB_Type        AS T  ON S.Type       = T.Id
+INNER JOIN TAB_Individuals AS I  ON S.Individual 
+WHERE S.projects LIKE '%MICROSCOPE%' OR S.tags LIKE '%MICROSCOPE%'`;
 const samples = await getQuery(qSamples);
 
 const qExtracts = "SELECT Id, Full_Extract_Id, Sample, Experiment_Date FROM TAB_Extract WHERE projects LIKE '%MICROSCOPE%'";
