@@ -64,11 +64,11 @@ const qSamples = `SELECT
   TG.Name            AS TypeGroup,
   T.Name             AS Type
 FROM      
-             TAB_Sample      AS Sa
-  INNER JOIN TAB_Type_Group  AS TG ON Sa.Type_Group = TG.Id
-  INNER JOIN TAB_Type        AS T  ON Sa.Type       = T.Id
-  INNER JOIN TAB_Individuals AS I  ON Sa.Individual = I.Id
-  INNER JOIN TAB_Site        AS S  ON I.site        = S.Id
+             TAB_Sample     AS Sa
+  INNER JOIN TAB_Type_Group AS TG ON Sa.Type_Group = TG.Id
+  INNER JOIN TAB_Type       AS T  ON Sa.Type       = T.Id
+  INNER JOIN TAB_Individual AS I  ON Sa.Individual = I.Id
+  INNER JOIN TAB_Site       AS S  ON I.site        = S.Id
 WHERE
   Sa.projects LIKE '%MICROSCOPE%' OR
   Sa.tags     LIKE '%MICROSCOPE%' OR
@@ -119,10 +119,54 @@ WHERE
 
 const libraries = await getQuery(qLibraries);
 
-const qCaptures = "SELECT C.Id, C.Full_Capture_Id, C.Library, C.Experiment_Date, P.Name, P.Short_Name FROM TAB_Capture AS C INNER JOIN TAB_Probe_Set AS P ON C.Probe_Set = P.Id WHERE C.projects LIKE '%MICROSCOPE%'"
+const qCaptures = `SELECT
+  C.Id,
+  C.Full_Capture_Id,
+  C.Library,
+  C.Experiment_Date,
+  P.Name,
+  P.Short_Name
+FROM
+             TAB_Capture    AS C
+  INNER JOIN TAB_Probe_Set  AS P ON C.Probe_Set    = P.Id
+  INNER JOIN TAB_Library    AS L ON C.library      = L.Id
+  INNER JOIN TAB_Extract    AS E  ON L.extract     = E.Id
+  INNER JOIN TAB_Sample     AS Sa ON E.sample      = Sa.Id
+  INNER JOIN TAB_Individual AS I  ON Sa.individual = I.Id
+  INNER JOIN TAB_Site       AS S  ON I.site        = S.Id
+WHERE
+  C.projects LIKE '%MICROSCOPE%' OR
+  C.tags     LIKE '%MICROSCOPE%' OR
+  L.tags     LIKE '%MICROSCOPE%' OR
+  E.tags     LIKE '%MICROSCOPE%' OR
+  Sa.tags    LIKE '%MICROSCOPE%' OR
+  I.tags     LIKE '%MICROSCOPE%' OR
+  S.tags     LIKE '%MICROSCOPE%'`;
+
 const captures = await getQuery(qCaptures);
 
-const qSequencings = "SELECT Id, Full_Sequencing_Id, Capture, Experiment_Date FROM TAB_Sequencing WHERE projects LIKE '%MICROSCOPE%'"
+const qSequencings = `SELECT
+  Se.Id,
+  Se.Full_Sequencing_Id,
+  Se.Capture,
+  Se.Experiment_Date
+FROM
+             TAB_Sequencing AS Se
+  INNER JOIN TAB_Capture    AS C  ON Se.capture    = C.Id
+  INNER JOIN TAB_Library    AS L  ON C.library     = L.Id
+  INNER JOIN TAB_Extract    AS E  ON L.extract     = E.Id
+  INNER JOIN TAB_Sample     AS Sa ON E.sample      = Sa.Id
+  INNER JOIN TAB_Individual AS I  ON Sa.individual = I.Id
+  INNER JOIN TAB_Site       AS S  ON I.site        = S.Id
+WHERE
+  Se.projects LIKE '%MICROSCOPE%' OR
+  Se.tags     LIKE '%MICROSCOPE%' OR
+  C.tags      LIKE '%MICROSCOPE%' OR
+  L.tags      LIKE '%MICROSCOPE%' OR
+  E.tags      LIKE '%MICROSCOPE%' OR
+  Sa.tags     LIKE '%MICROSCOPE%' OR
+  I.tags      LIKE '%MICROSCOPE%' OR
+  S.tags      LIKE '%MICROSCOPE%'`;
 const sequencings = await getQuery(qSequencings);
 
 const out = {sites, individuals, samples, extracts, libraries, captures, sequencings};
