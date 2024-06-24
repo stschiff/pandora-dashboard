@@ -23,26 +23,14 @@ function getQuery(q) {
 // const r = await getQuery("DESCRIBE TAB_Type");
 // console.log(r);
 
-const qSites = `SELECT
-  Id,
-  Site_Id,
-  Name,
-  Country,
-  Latitude,
-  Longitude
-FROM
-  TAB_Site
-WHERE
-  projects LIKE '%MICROSCOPE%' OR
-  tags     LIKE '%MICROSCOPE%' OR
-  Site_Id  IN   ("THR", "YAB", "MTR", "GLE", "MAK", "HBU", "MOM", "BRM",
-                 "EML", "GRS", "AGA", "DSM", "FZH", "IDB", "LLD")`;
-const sites = await getQuery(qSites);
-
 const qInds = `SELECT
   I.Id,
   I.Full_Individual_Id,
-  I.Site,
+  S.Full_Site_Id,
+  S.Name,
+  S.Country,
+  S.Latitude,
+  S.Longitude,
   I.C14_Calibrated_From,
   I.C14_Calibrated_To,
   I.Archaeological_Date_From,
@@ -169,7 +157,7 @@ WHERE
   S.tags      LIKE '%MICROSCOPE%'`;
 const sequencings = await getQuery(qSequencings);
 
-const out = {sites, individuals, samples, extracts, libraries, captures, sequencings};
+const out = {individuals, samples, extracts, libraries, captures, sequencings};
 
 console.log(JSON.stringify(out));
 
