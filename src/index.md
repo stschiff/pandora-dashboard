@@ -121,7 +121,8 @@ const qSeqs = `SELECT
   Se.Full_Sequencing_Id AS Sequencing,
   Se.Experiment_Date    AS Date,
   C.Name                AS Capture,
-  Ea.sample IS NOT NULL AS Eager
+  Ea.sample IS NOT NULL AS Eager,
+  Ea.total_reads
 FROM
             sequencings AS Se
   LEFT JOIN captures    AS C   ON Se.capture = C.Id
