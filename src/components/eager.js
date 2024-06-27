@@ -33,3 +33,16 @@ export async function loadEagerTable() {
     }));
     return eagerTables.reduce((acc, curr) => acc.concat(curr), []);
 }
+
+export async function loadEagerTableRaw() {
+    const eager = await FileAttachment("../data/eager.tsv").zip();
+    const eagerTables = await Promise.all(eager.filenames.map(async fn => {
+        const batchName = fn.split("/")[6];
+        const tab = await eager.file(fn).tsv();
+        return tab.map(row => {
+            row.batch_name = batchName;
+            return row;
+        });
+    }));
+    return eagerTables.reduce((acc, curr) => acc.concat(curr), []);
+}
