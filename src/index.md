@@ -31,7 +31,9 @@ const selected_batches = view(Inputs.table(batches_searched));
 
 ## Sites
 ```js
-const filter_cond_batches = selected_batches.length ? `WHERE Ea.batch_name IN (${selected_batches.map(b => `'` + b.batch_name + `'`)})` : "WHERE 1==2";
+const filter_cond_batches = selected_batches.length == [...batch_table].length ? "" :
+  selected_batches.length ? `WHERE Ea.batch_name IN (${selected_batches.map(b => `'` + b.batch_name + `'`)})` :
+  "WHERE 1==2";
 const qSites = `SELECT
   FIRST(I.Full_Site_Id) AS Site_Id,
   FIRST(I.Name)         AS Site,
