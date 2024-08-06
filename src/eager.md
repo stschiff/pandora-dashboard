@@ -1,3 +1,7 @@
+```js
+import "npm:d3-dsv";
+```
+
 # Eager Results
 
 ```js

@@ -8,7 +8,7 @@ import {loadEagerTable} from "./components/eager.js";
 const pandoraTables = await FileAttachment("./data/pandora.json").json();
 const eagerTable = await loadEagerTable();
 Object.assign(pandoraTables, {eager: eagerTable});
-const sql = DuckDBClient.sql(pandoraTables);
+const sql = await DuckDBClient.sql(pandoraTables);
 ```
 
 ## Batches
