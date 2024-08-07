@@ -15,8 +15,8 @@ const sql = await DuckDBClient.sql(pandoraTables);
 ```sql id=batch_table
 SELECT DISTINCT
   batch_name,
-  LEFT(batch_name, 10),
-  RIGHT(batch_name, LEN(batch_name) - 11)
+  LEFT(batch_name, 10) AS date,
+  RIGHT(batch_name, LEN(batch_name) - 11) AS short_name
 FROM eager
 ```
 
@@ -139,26 +139,38 @@ const qLibs = `SELECT
   L.Id                AS Id,
   L.Experiment_Date   AS Date,
   Ea.sample           AS Eager,
-  Ea.total_reads
+  C.Short_Name        AS ctype,
+  Ea.total_reads,
+  Ea.endog_endorspy,
+  Ea.endog_endorspy_post
 FROM
             libraries AS L
+  LEFT JOIN captures  AS C  ON C.library  = L.Id
   LEFT JOIN extracts  AS E  ON L.extract  = E.Id
   LEFT JOIN samples   AS Sa ON E.sample   = Sa.Id
   LEFT JOIN eager     AS Ea ON (Ea.sample LIKE CONCAT(L.Full_Library_Id, '.___') OR
                                 CONCAT(LEFT(Ea.sample, 6), RIGHT(Ea.sample, 10)) LIKE CONCAT(L.Full_Library_Id, '.___'))
   ${filter_cond_samples}`
-const lib_table = sql([qLibs]);
+const lib_table = aq.fromArrow(sql([qLibs]));
 ```
 
 ```js
+const capture_types_list = lib_table.column("ctype")
+captures_types_list.print()
+```
+
+```js
+const capture_types_list = lib_table.column("ctype")
+const capture_types = [...new Set(capture_types_list)]
+const selected_captures = view(Inputs.checkbox(capture_types, {label: "Capture Type"}));
 const selected_libs = view(Inputs.table(lib_table, {
-  columns: ["Library", "Date", "Eager", "total_reads"],
+  columns: ["Library", "Date", "Eager", "total_reads", "endog_endorspy", "endog_endorspy_post"],
   format: {
     "Date": (d) => d.substring(0, 10)
   }
 }));
 ```
-
+Capture types: ${capture_types_list}.
 Showing ${lib_table.numRows} library-sequencings
 
 ## Sequencings
