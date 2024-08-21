@@ -151,17 +151,11 @@ FROM
   LEFT JOIN eager     AS Ea ON (Ea.sample LIKE CONCAT(L.Full_Library_Id, '.___') OR
                                 CONCAT(LEFT(Ea.sample, 6), RIGHT(Ea.sample, 10)) LIKE CONCAT(L.Full_Library_Id, '.___'))
   ${filter_cond_samples}`
-const lib_table = aq.fromArrow(sql([qLibs]));
+const lib_table = sql([qLibs]);
 ```
 
 ```js
-const capture_types_list = lib_table.column("ctype")
-captures_types_list.print()
-```
-
-```js
-const capture_types_list = lib_table.column("ctype")
-const capture_types = [...new Set(capture_types_list)]
+const capture_types = [...new Set([...lib_table].map(s => s.ctype))]
 const selected_captures = view(Inputs.checkbox(capture_types, {label: "Capture Type"}));
 const selected_libs = view(Inputs.table(lib_table, {
   columns: ["Library", "Date", "Eager", "total_reads", "endog_endorspy", "endog_endorspy_post"],
