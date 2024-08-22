@@ -135,10 +135,12 @@ Selected ${selected_samples.length} samples.
 ```js 
 const filter_cond_samples = selected_samples.length ? `WHERE Sa.Id IN (${selected_samples.map(s => s.Id)})` : "WHERE 1==2";
 const qLibs = `SELECT
-  L.Full_Library_Id   AS Library,
-  L.Id                AS Id,
-  L.Experiment_Date   AS Date,
-  Ea.sample           AS Eager,
+  L.Full_Library_Id      AS Library,
+  L.Id                   AS Id,
+  L.Experiment_Date      AS Date,
+  Ea.sample              AS Eager,
+  Ea.endog_endorspy_post AS endog,
+  Ea.damage_5p1          AS damage,
   Ea.total_reads
 FROM
             libraries AS L
@@ -152,7 +154,7 @@ const lib_table = sql([qLibs]);
 
 ```js
 const selected_libs = view(Inputs.table(lib_table, {
-  columns: ["Library", "Date", "Eager", "total_reads"],
+  columns: ["Library", "Date", "Eager", "endog", "damage", "total_reads"],
   format: {
     "Date": (d) => d.substring(0, 10)
   }
