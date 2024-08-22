@@ -132,8 +132,15 @@ const selected_samples = view(Inputs.table(sample_table, {
 Selected ${selected_samples.length} samples.
 
 ## Library-Sequencing
+```js
+const capture_types = ["SG", "TF", "RP", "RM"];
+const selected_captures = await view(Inputs.checkbox(capture_types, {label: "Capture Type"}));
+```
+
+
 ```js 
-const filter_cond_samples = selected_samples.length ? `WHERE Sa.Id IN (${selected_samples.map(s => s.Id)})` : "WHERE 1==2";
+const filter_cond_samples = selected_samples.length ? `Sa.Id IN (${selected_samples.map(s => s.Id)})` : "1==2";
+const filter_cond_captures = selected_captures.length ? `ctype IN (${selected_captures.map(s => "'" + s + "'")})` : 1 == 1;
 const qLibs = `SELECT
   L.Full_Library_Id   AS Library,
   L.Id                AS Id,
@@ -150,13 +157,12 @@ FROM
   LEFT JOIN samples   AS Sa ON E.sample   = Sa.Id
   LEFT JOIN eager     AS Ea ON (Ea.sample LIKE CONCAT(L.Full_Library_Id, '.___') OR
                                 CONCAT(LEFT(Ea.sample, 6), RIGHT(Ea.sample, 10)) LIKE CONCAT(L.Full_Library_Id, '.___'))
-  ${filter_cond_samples}`
+WHERE
+  ${filter_cond_captures} AND ${filter_cond_samples}`;
 const lib_table = sql([qLibs]);
 ```
 
 ```js
-const capture_types = [...new Set([...lib_table].map(s => s.ctype))]
-const selected_captures = view(Inputs.checkbox(capture_types, {label: "Capture Type"}));
 const selected_libs = view(Inputs.table(lib_table, {
   columns: ["Library", "Date", "Eager", "total_reads", "endog_endorspy", "endog_endorspy_post"],
   format: {
@@ -164,7 +170,6 @@ const selected_libs = view(Inputs.table(lib_table, {
   }
 }));
 ```
-Capture types: ${capture_types_list}.
 Showing ${lib_table.numRows} library-sequencings
 
 ## Sequencings
