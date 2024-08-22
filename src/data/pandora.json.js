@@ -39,9 +39,10 @@ FROM
              TAB_Individual AS I
   INNER JOIN TAB_Site       AS S ON I.Site = S.Id
 WHERE
+  I.Deleted = 'false' AND (
   I.projects LIKE '%MICROSCOPE%' OR
   I.tags     LIKE '%MICROSCOPE%' OR
-  S.tags     LIKE '%MICROSCOPE%'`;
+  S.tags     LIKE '%MICROSCOPE%')`;
 const individuals = await getQuery(qInds);
 
 const qSamples = `SELECT
@@ -58,10 +59,11 @@ FROM
   INNER JOIN TAB_Individual AS I  ON Sa.Individual = I.Id
   INNER JOIN TAB_Site       AS S  ON I.site        = S.Id
 WHERE
+  Sa.Deleted = 'false' AND (
   Sa.projects LIKE '%MICROSCOPE%' OR
   Sa.tags     LIKE '%MICROSCOPE%' OR
   I.tags      LIKE '%MICROSCOPE%' OR
-  S.tags      LIKE '%MICROSCOPE%'`;
+  S.tags      LIKE '%MICROSCOPE%')`;
 const samples = await getQuery(qSamples);
 
 const qExtracts = `SELECT
@@ -75,11 +77,12 @@ FROM
   INNER JOIN TAB_Individual AS I  ON Sa.individual = I.Id
   INNER JOIN TAB_Site       AS S  ON I.site        = S.Id
 WHERE
+  E.Deleted = 'false' AND (
   E.projects LIKE '%MICROSCOPE%' OR
   E.tags     LIKE '%MICROSCOPE%' OR
   Sa.tags    LIKE '%MICROSCOPE%' OR
   I.tags     LIKE '%MICROSCOPE%' OR
-  S.tags     LIKE '%MICROSCOPE%'`;
+  S.tags     LIKE '%MICROSCOPE%')`;
 const extracts = await getQuery(qExtracts);
 
 const qLibraries = `SELECT
@@ -98,12 +101,13 @@ FROM
   INNER JOIN TAB_Individual AS I  ON Sa.individual = I.Id
   INNER JOIN TAB_Site       AS S  ON I.site        = S.Id
 WHERE
+  L.Deleted = 'false' AND (
   L.projects LIKE '%MICROSCOPE%' OR
   L.tags     LIKE '%MICROSCOPE%' OR
   E.tags     LIKE '%MICROSCOPE%' OR
   Sa.tags    LIKE '%MICROSCOPE%' OR
   I.tags     LIKE '%MICROSCOPE%' OR
-  S.tags     LIKE '%MICROSCOPE%'`;
+  S.tags     LIKE '%MICROSCOPE%')`;
 
 const libraries = await getQuery(qLibraries);
 
@@ -123,13 +127,14 @@ FROM
   INNER JOIN TAB_Individual AS I  ON Sa.individual = I.Id
   INNER JOIN TAB_Site       AS S  ON I.site        = S.Id
 WHERE
+  C.Deleted = 'false' AND (
   C.projects LIKE '%MICROSCOPE%' OR
   C.tags     LIKE '%MICROSCOPE%' OR
   L.tags     LIKE '%MICROSCOPE%' OR
   E.tags     LIKE '%MICROSCOPE%' OR
   Sa.tags    LIKE '%MICROSCOPE%' OR
   I.tags     LIKE '%MICROSCOPE%' OR
-  S.tags     LIKE '%MICROSCOPE%'`;
+  S.tags     LIKE '%MICROSCOPE%')`;
 
 const captures = await getQuery(qCaptures);
 
@@ -147,6 +152,7 @@ FROM
   INNER JOIN TAB_Individual AS I  ON Sa.individual = I.Id
   INNER JOIN TAB_Site       AS S  ON I.site        = S.Id
 WHERE
+  Se.Deleted = 'false' AND (
   Se.projects LIKE '%MICROSCOPE%' OR
   Se.tags     LIKE '%MICROSCOPE%' OR
   C.tags      LIKE '%MICROSCOPE%' OR
@@ -154,7 +160,7 @@ WHERE
   E.tags      LIKE '%MICROSCOPE%' OR
   Sa.tags     LIKE '%MICROSCOPE%' OR
   I.tags      LIKE '%MICROSCOPE%' OR
-  S.tags      LIKE '%MICROSCOPE%'`;
+  S.tags      LIKE '%MICROSCOPE%')`;
 const sequencings = await getQuery(qSequencings);
 
 const out = {individuals, samples, extracts, libraries, captures, sequencings};
