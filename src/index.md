@@ -15,8 +15,8 @@ const sql = await DuckDBClient.sql(pandoraTables);
 ```sql id=batch_table
 SELECT DISTINCT
   batch_name,
-  LEFT(batch_name, 10),
-  RIGHT(batch_name, LEN(batch_name) - 11)
+  LEFT(batch_name, 10) AS date,
+  RIGHT(batch_name, LEN(batch_name) - 11) AS short_name
 FROM eager
 ```
 
@@ -72,8 +72,37 @@ const qInds = `SELECT
   FIRST(I.Id)                 AS Id,
   FIRST(I.Name)               AS Site,
   FIRST(I.Country)            AS Country,
-  FIRST(Ea.nr_snps_covered)   AS NrSnps,
-  FIRST(EaSS.nr_snps_covered) AS NrSnps_SS,
+  CAST(FIRST(Ea.nr_snps_covered)   AS INT)                     AS NrSnps_DS,
+  CAST(FIRST(EaSS.nr_snps_covered) AS INT)                     AS NrSnps_SS,
+  CASE
+    WHEN NrSnps_SS IS NOT NULL AND NrSnps_DS IS NOT NULL THEN IF(NrSnps_SS > NrSnps_DS, NrSnps_SS, NrSnps_DS)
+    WHEN NrSnps_SS IS NOT NULL THEN NrSnps_SS
+    WHEN NrSnps_DS IS NOT NULL THEN NrSnps_DS
+    ELSE NULL
+  END AS NrSnps,
+  FIRST(Ea.xrate) AS xrate_DS,
+  FIRST(EaSS.xrate) AS xrate_SS,
+  FIRST(Ea.yrate) AS yrate_DS,
+  FIRST(EaSS.yrate) AS yrate_SS,
+  CASE
+    WHEN NrSnps_SS IS NOT NULL AND NrSnps_DS IS NOT NULL THEN IF(NrSnps_SS > NrSnps_DS, xrate_SS, xrate_DS)
+    WHEN NrSnps_SS IS NOT NULL THEN xrate_SS
+    WHEN NrSnps_DS IS NOT NULL THEN xrate_DS
+    ELSE NULL
+  END AS xrate,
+  CASE
+    WHEN NrSnps_SS IS NOT NULL AND NrSnps_DS IS NOT NULL THEN IF(NrSnps_SS > NrSnps_DS, yrate_SS, yrate_DS)
+    WHEN NrSnps_SS IS NOT NULL THEN yrate_SS
+    WHEN NrSnps_DS IS NOT NULL THEN yrate_DS
+    ELSE NULL
+  END AS yrate,
+  CASE
+    WHEN NrSnps_SS IS NOT NULL AND NrSnps_DS IS NOT NULL THEN IF(NrSnps_SS > NrSnps_DS, 'both(->SS)', 'both(->DS)')
+    WHEN NrSnps_SS IS NOT NULL THEN 'SS'
+    WHEN NrSnps_DS IS NOT NULL THEN 'DS'
+    ELSE NULL
+  END AS type,
+
   COUNT(DISTINCT L.Id)        AS NrLibraries,
   COUNT(DISTINCT Se.Id)       AS NrSequencings
 FROM
@@ -92,7 +121,7 @@ const ind_table = sql([qInds]);
 
 ```js
 const selected_individuals = view(Inputs.table(ind_table, {
-  columns: ["Individual", "Site", "Country", "NrLibraries", "NrSequencings", "NrSnps", "NrSnps_SS"]
+  columns: ["Individual", "NrLibraries", "NrSequencings", "NrSnps", "xrate", "yrate", "type"]
 }));
 ```
 Selected ${selected_individuals.length} individuals.
