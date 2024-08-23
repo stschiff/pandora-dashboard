@@ -80,10 +80,10 @@ const qInds = `SELECT
     WHEN NrSnps_DS IS NOT NULL THEN NrSnps_DS
     ELSE NULL
   END AS NrSnps,
-  FIRST(Ea.xrate) AS xrate_DS,
-  FIRST(EaSS.xrate) AS xrate_SS,
-  FIRST(Ea.yrate) AS yrate_DS,
-  FIRST(EaSS.yrate) AS yrate_SS,
+  MAX(Ea.xrate) AS xrate_DS,
+  MAX(EaSS.xrate) AS xrate_SS,
+  MAX(Ea.yrate) AS yrate_DS,
+  MAX(EaSS.yrate) AS yrate_SS,
   CASE
     WHEN NrSnps_SS IS NOT NULL AND NrSnps_DS IS NOT NULL THEN IF(NrSnps_SS > NrSnps_DS, xrate_SS, xrate_DS)
     WHEN NrSnps_SS IS NOT NULL THEN xrate_SS
@@ -102,7 +102,6 @@ const qInds = `SELECT
     WHEN NrSnps_DS IS NOT NULL THEN 'DS'
     ELSE NULL
   END AS type,
-
   COUNT(DISTINCT L.Id)        AS NrLibraries,
   COUNT(DISTINCT Se.Id)       AS NrSequencings
 FROM
@@ -112,7 +111,7 @@ FROM
   LEFT JOIN libraries         AS L    ON L.Extract    = E.Id
   LEFT JOIN captures          AS C    ON C.Library    = L.Id
   LEFT JOIN sequencings       AS Se   ON Se.Capture   = C.Id
-  LEFT JOIN eager             AS Ea   ON Ea.sample    = I.Full_Individual_Id
+  LEFT JOIN eager             AS Ea   ON Ea.sample    = I.Full_Individual_Id OR LEFT(Ea.sample, 6) = I.Full_Individual_Id
   LEFT JOIN eager             AS EaSS ON EaSS.sample  = CONCAT(I.Full_Individual_Id, '_ss')
   ${filter_cond_sites}
   GROUP BY I.Full_Individual_Id`
