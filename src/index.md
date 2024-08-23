@@ -111,8 +111,8 @@ FROM
   LEFT JOIN libraries         AS L    ON L.Extract    = E.Id
   LEFT JOIN captures          AS C    ON C.Library    = L.Id
   LEFT JOIN sequencings       AS Se   ON Se.Capture   = C.Id
-  LEFT JOIN eager             AS Ea   ON Ea.sample    = I.Full_Individual_Id OR LEFT(Ea.sample, 6) = I.Full_Individual_Id
-  LEFT JOIN eager             AS EaSS ON EaSS.sample  = CONCAT(I.Full_Individual_Id, '_ss')
+  LEFT JOIN eager             AS Ea   ON Ea.sample    = I.Full_Individual_Id                OR LEFT(Ea.sample,   6) = I.Full_Individual_Id
+  LEFT JOIN eager             AS EaSS ON EaSS.sample  = CONCAT(I.Full_Individual_Id, '_ss') OR LEFT(EaSS.sample, 9) = CONCAT(I.Full_Individual_Id, '_ss')
   ${filter_cond_sites}
   GROUP BY I.Full_Individual_Id`
 const ind_table = sql([qInds]);
