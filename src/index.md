@@ -1,6 +1,15 @@
 # Pandora dashboard for project MICROSCOPE
 
 ```js
+const db = await DuckDBClient.of({base: FileAttachment("./data/pandora_eager.duckdb")});
+```
+
+```sql
+SHOW ALL TABLES;
+```
+
+
+<!-- ```js
 import {loadEagerTable} from "./components/eager.js";
 ```
 
@@ -218,4 +227,4 @@ const selected_seqs = view(Inputs.table(seq_table, {
 }));
 ```
 
-Showing ${seq_table.numRows} sequencings
+Showing ${seq_table.numRows} sequencings -->

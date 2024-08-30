@@ -1,5 +1,8 @@
 import * as mysql from "mysql"
 import * as fs from 'fs/promises';
+import duckdb from 'duckdb'
+import { tableToIPC, tableFromJSON } from 'apache-arrow';
+import { resolve } from "path";
 
 const credentials_raw = await fs.readFile(process.env.HOME + "/.credentials", 'utf8');
 const [host, port, user, password] = credentials_raw.split("\n");
@@ -20,9 +23,25 @@ function getQuery(q) {
   })
 }
 
-// const r = await getQuery("DESCRIBE TAB_Type");
-// console.log(r);
+function duckDbExec(dbCon, q) {
+  return new Promise((resolve, reject) => {
+    dbCon.exec(q, function(err, res) {
+      if(err) return reject(err);
+      resolve(res);
+    });
+  })
+}
 
+function duckDbBuffer(dbCon, name, arrowTable) {
+  return new Promise((resolve, reject) => {
+    dbCon.register_buffer(name, [tableToIPC(arrowTable)], true, (err, res) => {
+      if (err) return reject(err)
+      resolve(res);
+    });
+  })
+}
+
+console.error("Querying Pandora for Individual Table");
 const qInds = `SELECT
   I.Id,
   I.Full_Individual_Id,
@@ -45,6 +64,7 @@ WHERE
   S.tags     LIKE '%MICROSCOPE%')`;
 const individuals = await getQuery(qInds);
 
+console.error("Querying Pandora for Sample Table");
 const qSamples = `SELECT
   Sa.Id,
   Sa.Full_Sample_Id,
@@ -66,6 +86,7 @@ WHERE
   S.tags      LIKE '%MICROSCOPE%')`;
 const samples = await getQuery(qSamples);
 
+console.error("Querying Pandora for Extracts Table");
 const qExtracts = `SELECT
   E.Id,
   E.Full_Extract_Id,
@@ -85,6 +106,7 @@ WHERE
   S.tags     LIKE '%MICROSCOPE%')`;
 const extracts = await getQuery(qExtracts);
 
+console.error("Querying Pandora for Library Table");
 const qLibraries = `SELECT
   L.Id,
   L.Full_Library_Id,
@@ -111,6 +133,7 @@ WHERE
 
 const libraries = await getQuery(qLibraries);
 
+console.error("Querying Pandora for Captures Table");
 const qCaptures = `SELECT
   C.Id,
   C.Full_Capture_Id,
@@ -138,6 +161,7 @@ WHERE
 
 const captures = await getQuery(qCaptures);
 
+console.error("Querying Pandora for Sequencings Table");
 const qSequencings = `SELECT
   Se.Id,
   Se.Full_Sequencing_Id,
@@ -165,6 +189,39 @@ const sequencings = await getQuery(qSequencings);
 
 const out = {individuals, samples, extracts, libraries, captures, sequencings};
 
-console.log(JSON.stringify(out));
+console.error("Setting up DuckDB database");
+const dbFile = "/tmp/pandora_eager.duckdb";
+await fs.rm(dbFile);
+const db = new duckdb.Database(dbFile);
+const dcon = db.connect();
+
+
+const jsonData = [
+  {"userId":1,"id":1,"title":"delectus aut autem","completed":false},
+  {"userId":1,"id":2,"title":"quis ut nam facilis et officia qui","completed":false}
+];
+
+dcon.exec(`INSTALL arrow; LOAD arrow;`, (err) => {
+  if (err) {
+      console.warn(err);
+      return;
+  }
+
+  const arrowTable = tableFromJSON(jsonData);
+  con.register_buffer("jsonDataTable", [tableToIPC(arrowTable)], true, (err) => {
+      if (err) {
+          console.warn(err); 
+          return;
+      }
+  con.exec("CREATE TABLE testTable AS SELECT * FROM jsonDataTable;");
+  });
+});
+// await duckDbExec(dcon, `INSTALL arrow; LOAD arrow`);
+// await duckDbBuffer(dcon, "indTableRaw", tableFromJSON(individuals));
+// await duckDbExec(dcon, "CREATE TABLE individuals AS SELECT * FROM indTableRaw");
+
+// output database file to stdout, so that Framework can cache its result.
+const readStream = fs.createReadStream(dbFile);
+readStream.pipe(process.stdout);
 
 con.end();
