@@ -1,4 +1,20 @@
 import {FileAttachment} from "npm:@observablehq/stdlib";
+import * as aq from "npm:arquero";
+
+function clean_eager_sample(sample_string) {
+    if(sample_string.length == 6)
+        return sample_string;
+    if(sample_string.substr(6, 3) == "_ss") {
+        if(sample_string.length == 9)
+            return sample_string.substr(0, 6);
+        else {
+            return sample_string.substr(0, 6) + sample_string.substr(9);
+        }
+    }
+    else {
+        return sample_string;
+    }
+}
 
 export async function loadEagerTable() {
     const eager = await FileAttachment("../data/eager.tsv").zip();
@@ -8,6 +24,8 @@ export async function loadEagerTable() {
         return tab.map(row => ({
             batch_name:                batchName,
             sample:                    row.Sample,
+            sample_clean:              clean_eager_sample(row.Sample),
+            single_stranded:           row.Sample.substr(6, 3) == "_ss",
             total_reads:               Number(row["Samtools Flagstat (pre-samtools filter)_mqc-generalstats-samtools_flagstat_pre_samtools_filter-flagstat_total"]),
             mapped_reads:              Number(row["Samtools Flagstat (pre-samtools filter)_mqc-generalstats-samtools_flagstat_pre_samtools_filter-mapped_passed"]),
             mapped_reads_post:         Number(row["Samtools Flagstat (post-samtools filter)_mqc-generalstats-samtools_flagstat_post_samtools_filter-mapped_passed"]),
@@ -32,6 +50,18 @@ export async function loadEagerTable() {
         }));
     }));
     return eagerTables.reduce((acc, curr) => acc.concat(curr), []);
+}
+
+function mergeStrandedCols(row) {
+    if()
+}
+
+export async function loadEagerTableStrandCombined() {
+    const eager_ds = await loadEagerTable().then(t => aq.from(t).filter(row => !row.single_stranded));
+    const eager_ss = await loadEagerTable().then(t => aq.from(t).filter(row => row.single_stranded));
+    return eager_ds
+        .join_full(eager_ss, "sample_clean", null, { suffix: ["_ds", "_ss"] })
+        .derive(mergeStrandedCols);
 }
 
 export async function loadEagerTableRaw() {
