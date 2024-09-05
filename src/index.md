@@ -14,9 +14,9 @@ const sql = await DuckDBClient.sql(pandoraTables);
 ## Batches
 ```sql id=batch_table
 SELECT DISTINCT
-  batch_name_ds,
-  LEFT(batch_name_ds, 10) AS date,
-  RIGHT(batch_name_ds, LEN(batch_name_ds) - 11) AS short_name
+  batch_name,
+  LEFT(batch_name, 10) AS date,
+  RIGHT(batch_name, LEN(batch_name) - 11) AS short_name
 FROM eager
 ```
 
@@ -65,45 +65,6 @@ const selected_sites = view(Inputs.table(sites_searched));
 ```
 
 ## Individuals
-<!-- ```js 
-const filter_cond_sites = selected_sites.length ? `WHERE I.Full_Site_Id IN (${selected_sites.map(s => `'` + s.Site_Id + `'`)})` : "WHERE 1==2";
-const qInds = `SELECT
-  FIRST(I.Full_Individual_Id)  AS Individual,
-  FIRST(I.Id)                  AS Id,
-  FIRST(I.Name)                AS Site,
-  FIRST(I.Country)             AS Country,
-  FIRST(Ea.nr_snps_covered_ds) AS NrSnps_DS,
-  FIRST(Ea.nr_snps_covered_ss) AS NrSnps_SS,
-  CASE
-    WHEN NrSnps_SS IS NOT NULL AND NrSnps_DS IS NOT NULL THEN IF(NrSnps_SS > NrSnps_DS, NrSnps_SS, NrSnps_DS)
-    WHEN NrSnps_SS IS NOT NULL THEN NrSnps_SS
-    WHEN NrSnps_DS IS NOT NULL THEN NrSnps_DS
-    ELSE NULL
-  END AS NrSnps,
-  MAX(Ea.xrate_ds) AS xrate_DS2,
-  MAX(Ea.xrate_ss) AS xrate_SS2,
-  MAX(Ea.yrate_ds) AS yrate_DS2,
-  MAX(Ea.yrate_ss) AS yrate_SS2,
-  CASE
-    WHEN NrSnps_SS IS NOT NULL AND NrSnps_DS IS NOT NULL THEN IF(NrSnps_SS > NrSnps_DS, xrate_SS2, xrate_DS2)
-    WHEN NrSnps_SS IS NOT NULL THEN xrate_SS2
-    WHEN NrSnps_DS IS NOT NULL THEN xrate_DS2
-    ELSE NULL
-  END AS xrate,
-  COUNT(DISTINCT L.Id)        AS NrLibraries,
-  COUNT(DISTINCT Se.Id)       AS NrSequencings
-FROM
-            individuals       AS I
-  LEFT JOIN samples           AS S    ON S.Individual = I.Id
-  LEFT JOIN extracts          AS E    ON E.Sample     = S.Id
-  LEFT JOIN libraries         AS L    ON L.Extract    = E.Id
-  LEFT JOIN captures          AS C    ON C.Library    = L.Id
-  LEFT JOIN sequencings       AS Se   ON Se.Capture   = C.Id
-  LEFT JOIN eager             AS Ea   ON Ea.sample_clean = I.Full_Individual_Id
-  ${filter_cond_sites}
-  GROUP BY I.Full_Individual_Id`
-const ind_table = sql([qInds]);
-``` -->
 
 ```js 
 const filter_cond_sites = selected_sites.length ? `WHERE I.Full_Site_Id IN (${selected_sites.map(s => `'` + s.Site_Id + `'`)})` : "WHERE 1==2";
@@ -112,32 +73,10 @@ const qInds = `SELECT
   FIRST(I.Id)                  AS Id,
   FIRST(I.Name)                AS Site,
   FIRST(I.Country)             AS Country,
-  FIRST(Ea.nr_snps_covered_ds) AS NrSnps_DS,
-  FIRST(Ea.nr_snps_covered_ss) AS NrSnps_SS,
-  CASE
-    WHEN NrSnps_SS > 0 AND NrSnps_DS > 0 THEN IF(NrSnps_SS > NrSnps_DS, NrSnps_SS, NrSnps_DS)
-    WHEN NrSnps_SS > 0 THEN NrSnps_SS
-    WHEN NrSnps_DS > 0 THEN NrSnps_DS
-    ELSE NULL
-  END AS NrSnps,
-  CASE
-    WHEN NrSnps_SS IS NOT NULL AND NrSnps_DS IS NOT NULL THEN IF(NrSnps_SS > NrSnps_DS, MAX(Ea.xrate_ss), MAX(Ea.xrate_ds))
-    WHEN NrSnps_SS IS NOT NULL THEN MAX(Ea.xrate_ss)
-    WHEN NrSnps_DS IS NOT NULL THEN MAX(Ea.xrate_ds)
-    ELSE NULL
-  END AS xrate,
-  CASE
-    WHEN NrSnps_SS IS NOT NULL AND NrSnps_DS IS NOT NULL THEN IF(NrSnps_SS > NrSnps_DS, MAX(Ea.yrate_ss), MAX(Ea.yrate_ds))
-    WHEN NrSnps_SS IS NOT NULL THEN MAX(Ea.yrate_ss)
-    WHEN NrSnps_DS IS NOT NULL THEN MAX(Ea.yrate_ds)
-    ELSE NULL
-  END AS yrate,
-  CASE
-    WHEN NrSnps_SS > 0 AND NrSnps_DS > 0 THEN IF(NrSnps_SS > NrSnps_DS, 'both(->SS)', 'both(->DS)')
-    WHEN NrSnps_SS > 0 THEN 'SS'
-    WHEN NrSnps_DS > 0 THEN 'DS'
-    ELSE NULL
-  END AS type,
+  FIRST(Ea.nr_snps_covered)    AS NrSnps,
+  FIRST(Ea.xrate),
+  FIRST(Ea.yrate),
+  FIRST(Ea.stranded) AS type,
   COUNT(DISTINCT L.Id)        AS NrLibraries,
   COUNT(DISTINCT Se.Id)       AS NrSequencings
 FROM
