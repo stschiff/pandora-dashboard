@@ -55,11 +55,12 @@ export async function loadEagerTable() {
 export async function loadEagerTableStrandCombined() {
     const eager_ds = await loadEagerTable().then(t => aq.from(t).filter(row => !row.single_stranded));
     const eager_ss = await loadEagerTable().then(t => aq.from(t).filter(row => row.single_stranded));
-    return eager_ds
-        .join_full(eager_ss, "sample", null, { suffix: ["_ds", "_ss"] })
-        .filter(row => row.sample.length == 6)
+    const merged_eager = eager_ds
+        .join_full(eager_ss, "sample_clean", null, { suffix: ["_ds", "_ss"] });
+    const stranded_lookup_table = merged_eager
+        .filter(row => row.sample_clean.length == 6)
         .derive({ stranded : row => {
-            if(row.nr_snps_covered_ds != null && row.nr_snps_covered_ds != null) {
+            if(row.nr_snps_covered_ss != null && row.nr_snps_covered_ds != null) {
                 if(row.nr_snps_covered_ds > row.nr_snps_covered_ss) {
                     return "DS*";
                 } else {
@@ -74,27 +75,31 @@ export async function loadEagerTableStrandCombined() {
                 return null;
             }
         }})
-        .objects()
-        .map(row => {
-            const ret_object = {};
-            for (const key in row) {
-                if(key == "sample" || key == "stranded") {
-                    ret_object[key] = row[key];
-                }
-                if(row.stranded.substr(0, 2) == "SS") {
-                    if(key.substr(key.length - 3, 3) == "_ss") {
-                        ret_object[key.substr(0, key.length - 3)] = row[key];
-                    }
-                }
-                else if(row.stranded.substr(0, 2) == "DS") {
-                    if(key.substr(key.length - 3, 3) == "_ds") {
-                        ret_object[key.substr(0, key.length - 3)] = row[key];
-                    }
-                }
-            }
-            return ret_object;
-        });
-}
+        .select(["sample_clean", "stranded"]);
+    return merged_eager
+        .derive({ ind_name : aq.escape(row => row.sample_clean.substr(0, 6)) })
+        .join_left(stranded_lookup_table, ["ind_name", "sample_clean"])
+        .objects();
+        // .map(row => {
+        //     const ret_object = {};
+        //     for (const key in row) {
+        //         if(key == "sample_clean_1" || key == "stranded") {
+        //             ret_object[key] = row[key];
+        //         }
+        //         if(row.stranded == "SS" || row.stranded == "SS*") {
+        //             if(key.substr(key.length - 3, 3) == "_ss") {
+        //                 ret_object[key.substr(0, key.length - 3)] = row[key];
+        //             }
+        //         }
+        //         else if(row.stranded == "DS" || row.stranded == "DS*") {
+        //             if(key.substr(key.length - 3, 3) == "_ds") {
+        //                 ret_object[key.substr(0, key.length - 3)] = row[key];
+        //             }
+        //         }
+        //     }
+        //     return ret_object;
+        // });
+} 
 
 export async function loadEagerTableRaw() {
     const eager = await FileAttachment("../data/eager.tsv").zip();
