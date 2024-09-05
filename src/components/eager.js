@@ -52,16 +52,12 @@ export async function loadEagerTable() {
     return eagerTables.reduce((acc, curr) => acc.concat(curr), []);
 }
 
-function mergeStrandedCols(row) {
-    if()
-}
-
 export async function loadEagerTableStrandCombined() {
     const eager_ds = await loadEagerTable().then(t => aq.from(t).filter(row => !row.single_stranded));
     const eager_ss = await loadEagerTable().then(t => aq.from(t).filter(row => row.single_stranded));
     return eager_ds
         .join_full(eager_ss, "sample_clean", null, { suffix: ["_ds", "_ss"] })
-        .derive(mergeStrandedCols);
+        .objects();
 }
 
 export async function loadEagerTableRaw() {
