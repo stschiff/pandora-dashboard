@@ -69,14 +69,14 @@ const selected_sites = view(Inputs.table(sites_searched));
 ```js 
 const filter_cond_sites = selected_sites.length ? `WHERE I.Full_Site_Id IN (${selected_sites.map(s => `'` + s.Site_Id + `'`)})` : "WHERE 1==2";
 const qInds = `SELECT
-  FIRST(I.Full_Individual_Id)  AS Individual,
-  FIRST(I.Id)                  AS Id,
-  FIRST(I.Name)                AS Site,
-  FIRST(I.Country)             AS Country,
-  FIRST(Ea.nr_snps_covered)    AS NrSnps,
-  FIRST(Ea.xrate),
-  FIRST(Ea.yrate),
-  FIRST(Ea.stranded) AS type,
+  FIRST(I.Full_Individual_Id) AS Individual,
+  FIRST(I.Id)                 AS Id,
+  FIRST(I.Name)               AS Site,
+  FIRST(I.Country)            AS Country,
+  FIRST(Ea.nr_snps_covered)   AS NrSnps,
+  FIRST(Ea.xrate)             AS xrate,
+  FIRST(Ea.yrate)             AS yrate,
+  FIRST(Ea.stranded)          AS type,
   COUNT(DISTINCT L.Id)        AS NrLibraries,
   COUNT(DISTINCT Se.Id)       AS NrSequencings
 FROM
@@ -140,7 +140,7 @@ const qLibs = `SELECT
   L.Full_Library_Id      AS Library,
   L.Id                   AS Id,
   L.Experiment_Date      AS Date,
-  Ea.sample_ds           AS Eager,
+  Ea.sample              AS Eager,
   Ea.endog_endorspy_post AS endog,
   Ea.damage_5p1          AS damage,
   Ea.total_reads
@@ -148,8 +148,7 @@ FROM
             libraries AS L
   LEFT JOIN extracts  AS E  ON L.extract  = E.Id
   LEFT JOIN samples   AS Sa ON E.sample   = Sa.Id
-  LEFT JOIN eager     AS Ea ON (Ea.sample LIKE CONCAT(L.Full_Library_Id, '.___') OR
-                                CONCAT(LEFT(Ea.sample, 6), RIGHT(Ea.sample, 10)) LIKE CONCAT(L.Full_Library_Id, '.___'))
+  LEFT JOIN eager     AS Ea ON Ea.sample_clean LIKE CONCAT(L.Full_Library_Id, '.___')
   ${filter_cond_samples}`
 const lib_table = sql([qLibs]);
 ```
@@ -179,7 +178,7 @@ FROM
   LEFT JOIN libraries         AS L  ON C.library  = L.Id
   LEFT JOIN extracts          AS E  ON L.extract  = E.Id
   LEFT JOIN samples           AS Sa ON E.sample   = Sa.Id
-  LEFT JOIN eager             AS Ea ON Ea.sample  LIKE CONCAT(Se.Full_Sequencing_Id, '%')
+  LEFT JOIN eager             AS Ea ON Ea.sample_clean LIKE CONCAT(Se.Full_Sequencing_Id, '%')
   ${filter_cond_samples}`
 const seq_table = sql([qSeqs]);
 ```

@@ -79,26 +79,29 @@ export async function loadEagerTableStrandCombined() {
     return merged_eager
         .derive({ ind_name : aq.escape(row => row.sample_clean.substr(0, 6)) })
         .join_left(stranded_lookup_table, ["ind_name", "sample_clean"])
-        .objects();
-        // .map(row => {
-        //     const ret_object = {};
-        //     for (const key in row) {
-        //         if(key == "sample_clean_1" || key == "stranded") {
-        //             ret_object[key] = row[key];
-        //         }
-        //         if(row.stranded == "SS" || row.stranded == "SS*") {
-        //             if(key.substr(key.length - 3, 3) == "_ss") {
-        //                 ret_object[key.substr(0, key.length - 3)] = row[key];
-        //             }
-        //         }
-        //         else if(row.stranded == "DS" || row.stranded == "DS*") {
-        //             if(key.substr(key.length - 3, 3) == "_ds") {
-        //                 ret_object[key.substr(0, key.length - 3)] = row[key];
-        //             }
-        //         }
-        //     }
-        //     return ret_object;
-        // });
+        .objects()
+        .map(row => {
+            const ret_object = {};
+            for (const key in row) {
+                if(key == "sample_clean_1") {
+                    ret_object["sample_clean"] = row[key];
+                }
+                else if(key == "stranded") {
+                    ret_object[key] = row[key];
+                }
+                if(row.stranded == "SS" || row.stranded == "SS*") {
+                    if(key.substr(key.length - 3, 3) == "_ss") {
+                        ret_object[key.substr(0, key.length - 3)] = row[key];
+                    }
+                }
+                else if(row.stranded == "DS" || row.stranded == "DS*") {
+                    if(key.substr(key.length - 3, 3) == "_ds") {
+                        ret_object[key.substr(0, key.length - 3)] = row[key];
+                    }
+                }
+            }
+            return ret_object;
+        });
 } 
 
 export async function loadEagerTableRaw() {
