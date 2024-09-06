@@ -17,7 +17,7 @@ function clean_eager_sample(sample_string) {
 }
 
 export async function loadEagerTable() {
-    const eager = await FileAttachment("../data/eager.tsv").zip();
+    const eager = await FileAttachment("../data/eager.zip").zip();
     const eagerTables = await Promise.all(eager.filenames.map(async fn => {
         const batchName = fn.split("/")[6];
         const tab = await eager.file(fn).tsv({ typed: true });
@@ -105,7 +105,7 @@ export async function loadEagerTableStrandCombined() {
 } 
 
 export async function loadEagerTableRaw() {
-    const eager = await FileAttachment("../data/eager.tsv").zip();
+    const eager = await FileAttachment("../data/eager.zip").zip();
     const eagerTables = await Promise.all(eager.filenames.map(async fn => {
         const batchName = fn.split("/")[6];
         const tab = await eager.file(fn).tsv({ typed: true });
