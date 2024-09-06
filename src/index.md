@@ -1,13 +1,14 @@
 # Pandora dashboard for project MICROSCOPE
 
 ```js
-import { loadEagerTableStrandCombined } from "./components/eager.js";
+import { loadEagerTableProcessed, loadEagerIndividuals } from "./components/eager.js";
 ```
 
 ```js
 const pandoraTables = await FileAttachment("./data/pandora.json").json();
-const eagerTable = await loadEagerTableStrandCombined();
-Object.assign(pandoraTables, {eager: eagerTable});
+const eagerTableProcessed = await loadEagerTableProcessed();
+const eagerIndividuals = await loadEagerIndividuals();
+Object.assign(pandoraTables, {eager: eagerTableProcessed, eagerIndividuals});
 const sql = await DuckDBClient.sql(pandoraTables);
 ```
 
@@ -17,7 +18,7 @@ SELECT DISTINCT
   batch_name,
   LEFT(batch_name, 10) AS date,
   RIGHT(batch_name, LEN(batch_name) - 11) AS short_name
-FROM eager
+FROM eagerIndividuals
 ```
 
 ```js
@@ -32,7 +33,7 @@ const selected_batches = view(Inputs.table(batches_searched));
 ## Sites
 ```js
 const filter_cond_batches = selected_batches.length == [...batch_table].length ? "" :
-  selected_batches.length ? `WHERE Ea.batch_name_ds IN (${selected_batches.map(b => `'` + b.batch_name + `'`)})` :
+  selected_batches.length ? `WHERE Ea.batch_name IN (${selected_batches.map(b => `'` + b.batch_name + `'`)})` :
   "WHERE 1==2";
 const qSites = `SELECT
   FIRST(I.Full_Site_Id) AS Site_Id,
@@ -44,13 +45,14 @@ const qSites = `SELECT
   COUNT(DISTINCT L.Id)  AS NrLibraries,
   COUNT(DISTINCT C.Id)  AS NrCaptures,
   COUNT(DISTINCT Se.Id) AS NrSequencings
-  FROM individuals      AS I
-  LEFT JOIN samples     AS S  ON S.Individual = I.Id
-  LEFT JOIN extracts    AS E  ON E.Sample     = S.Id
-  LEFT JOIN libraries   AS L  ON L.Extract    = E.Id
-  LEFT JOIN captures    AS C  ON C.Library    = L.Id
-  LEFT JOIN sequencings AS Se ON Se.Capture   = C.Id
-  LEFT JOIN eager       AS Ea ON Ea.sample_clean = I.Full_Individual_Id
+  FROM
+            individuals      AS I
+  LEFT JOIN samples          AS S  ON S.Individual = I.Id
+  LEFT JOIN extracts         AS E  ON E.Sample     = S.Id
+  LEFT JOIN libraries        AS L  ON L.Extract    = E.Id
+  LEFT JOIN captures         AS C  ON C.Library    = L.Id
+  LEFT JOIN sequencings      AS Se ON Se.Capture   = C.Id
+  LEFT JOIN eagerIndividuals AS Ea ON Ea.sample_clean = I.Full_Individual_Id
   ${filter_cond_batches}
   GROUP BY I.Full_Site_Id`
 const sites_table = sql([qSites]);
@@ -80,13 +82,13 @@ const qInds = `SELECT
   COUNT(DISTINCT L.Id)        AS NrLibraries,
   COUNT(DISTINCT Se.Id)       AS NrSequencings
 FROM
-            individuals       AS I
-  LEFT JOIN samples           AS S    ON S.Individual = I.Id
-  LEFT JOIN extracts          AS E    ON E.Sample     = S.Id
-  LEFT JOIN libraries         AS L    ON L.Extract    = E.Id
-  LEFT JOIN captures          AS C    ON C.Library    = L.Id
-  LEFT JOIN sequencings       AS Se   ON Se.Capture   = C.Id
-  LEFT JOIN eager             AS Ea   ON Ea.sample_clean = I.Full_Individual_Id
+            individuals      AS I
+  LEFT JOIN samples          AS S    ON S.Individual = I.Id
+  LEFT JOIN extracts         AS E    ON E.Sample     = S.Id
+  LEFT JOIN libraries        AS L    ON L.Extract    = E.Id
+  LEFT JOIN captures         AS C    ON C.Library    = L.Id
+  LEFT JOIN sequencings      AS Se   ON Se.Capture   = C.Id
+  LEFT JOIN eagerIndividuals AS Ea   ON Ea.sample_clean = I.Full_Individual_Id
   ${filter_cond_sites}
   GROUP BY I.Full_Individual_Id`
 const ind_table = sql([qInds]);
@@ -148,7 +150,7 @@ FROM
             libraries AS L
   LEFT JOIN extracts  AS E  ON L.extract  = E.Id
   LEFT JOIN samples   AS Sa ON E.sample   = Sa.Id
-  LEFT JOIN eager     AS Ea ON Ea.sample_clean LIKE CONCAT(L.Full_Library_Id, '.___')
+  LEFT JOIN eager     AS Ea ON Ea.sample_clean_ss LIKE CONCAT(L.Full_Library_Id, '.___')
   ${filter_cond_samples}`
 const lib_table = sql([qLibs]);
 ```
@@ -178,7 +180,7 @@ FROM
   LEFT JOIN libraries         AS L  ON C.library  = L.Id
   LEFT JOIN extracts          AS E  ON L.extract  = E.Id
   LEFT JOIN samples           AS Sa ON E.sample   = Sa.Id
-  LEFT JOIN eager             AS Ea ON Ea.sample_clean LIKE CONCAT(Se.Full_Sequencing_Id, '%')
+  LEFT JOIN eager             AS Ea ON Ea.sample LIKE CONCAT(Se.Full_Sequencing_Id, '%')
   ${filter_cond_samples}`
 const seq_table = sql([qSeqs]);
 ```

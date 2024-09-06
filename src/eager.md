@@ -9,7 +9,7 @@ import * as eager from "./components/eager.js";
 ```
 
 ```js
-const eagerTable = await eager.loadEagerTable();
+const eagerTable = await eager.loadEagerTableProcessed();
 const eagerSearched = view(Inputs.search(eagerTable, {placeholder: "Search Eager…"}));
 ```
 
@@ -33,10 +33,10 @@ view(Inputs.table(eagerRawSearched))
 
 # Joined
 ```js
-const eagerTableJoined = await eager.loadEagerTableStrandCombined();
-const eagerJoined = view(Inputs.search(eagerTableJoined, {placeholder: "Search Eager…"}));
+const eagerTableIndividuals = await eager.loadEagerIndividuals();
+const eagerIndividuals = view(Inputs.search(eagerTableIndividuals, {placeholder: "Search Eager…"}));
 ```
 
 ```js
-view(Inputs.table(eagerJoined))
+view(Inputs.table(eagerIndividuals))
 ```
