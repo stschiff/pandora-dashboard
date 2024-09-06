@@ -26,6 +26,7 @@ function getQuery(q) {
 const qInds = `SELECT
   I.Id,
   I.Full_Individual_Id,
+  I.Creation_Date,
   S.Full_Site_Id,
   S.Name,
   S.Country,
