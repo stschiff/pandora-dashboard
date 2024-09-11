@@ -150,7 +150,7 @@ FROM
             libraries AS L
   LEFT JOIN extracts  AS E  ON L.extract  = E.Id
   LEFT JOIN samples   AS Sa ON E.sample   = Sa.Id
-  LEFT JOIN eager     AS Ea ON Ea.sample_clean_ss LIKE CONCAT(L.Full_Library_Id, '.___')
+  LEFT JOIN eager     AS Ea ON Ea.sample_clean LIKE CONCAT(L.Full_Library_Id, '.___')
   ${filter_cond_samples}`
 const lib_table = sql([qLibs]);
 ```

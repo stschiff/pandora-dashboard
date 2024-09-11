@@ -34,7 +34,7 @@ export async function loadEagerTableProcessed() {
     return eagerTableRaw.map(row => ({
         batch_name:                row.batch_name,
         sample:                    row.Sample,
-        sample_clean_ss:           clean_eager_sample_ss(row.Sample),
+        sample_clean:           clean_eager_sample_ss(row.Sample),
         single_stranded:           row.Sample.substring(6, 9) == "_ss",
         total_reads:               row["Samtools Flagstat (pre-samtools filter)_mqc-generalstats-samtools_flagstat_pre_samtools_filter-flagstat_total"],
         mapped_reads:              row["Samtools Flagstat (pre-samtools filter)_mqc-generalstats-samtools_flagstat_pre_samtools_filter-mapped_passed"],
@@ -61,11 +61,11 @@ export async function loadEagerTableProcessed() {
 }
 
 export async function loadEagerIndividuals() {
-    const eagerProcessed = await loadEagerTableProcessed().then(t => t.filter(row => row.sample_clean_ss.length == 6));
+    const eagerProcessed = await loadEagerTableProcessed().then(t => t.filter(row => row.sample_clean.length == 6));
     const eager_ds = aq.from(eagerProcessed).filter(row => !row.single_stranded);
     const eager_ss = aq.from(eagerProcessed).filter(row => row.single_stranded);
     const merged_eager_inds = eager_ds
-        .join_full(eager_ss, "sample_clean_ss", null, { suffix: ["_ds", "_ss"] });
+        .join_full(eager_ss, "sample_clean", null, { suffix: ["_ds", "_ss"] });
     const stranded_lookup_table = merged_eager_inds
         .derive({ stranded : row => {
             if(row.nr_snps_covered_ss != null && row.nr_snps_covered_ds != null) {
@@ -83,14 +83,14 @@ export async function loadEagerIndividuals() {
                 return null;
             }
         }})
-        .select(["sample_clean_ss", "stranded"]);
+        .select(["sample_clean", "stranded"]);
     return merged_eager_inds
-        .join_left(stranded_lookup_table, "sample_clean_ss")
+        .join_left(stranded_lookup_table, "sample_clean")
         .objects()
         .map(row => {
             const ret_object = {};
             for (const key in row) {
-                if(key == "sample_clean_ss" || key == "stranded") {
+                if(key == "sample_clean" || key == "stranded") {
                     ret_object[key] = row[key];
                 }
                 if(row.stranded == "SS" || row.stranded == "SS*") {
