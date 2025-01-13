@@ -72,6 +72,7 @@ const selected_sites = view(Inputs.table(sites_searched));
 const filter_cond_sites = selected_sites.length ? `WHERE I.Full_Site_Id IN (${selected_sites.map(s => `'` + s.Site_Id + `'`)})` : "WHERE 1==2";
 const qInds = `SELECT
   FIRST(I.Full_Individual_Id) AS Individual,
+  FIRST(I.Archaeological_ID)  AS ArchId,
   FIRST(I.Id)                 AS Id,
   FIRST(I.Name)               AS Site,
   FIRST(I.Country)            AS Country,
@@ -96,7 +97,7 @@ const ind_table = sql([qInds]);
 
 ```js
 const selected_individuals = view(Inputs.table(ind_table, {
-  columns: ["Individual", "NrLibraries", "NrSequencings", "NrSnps", "xrate", "yrate", "type"]
+  columns: ["Individual", "ArchId", "NrLibraries", "NrSequencings", "NrSnps", "xrate", "yrate", "type"]
 }));
 ```
 Selected ${selected_individuals.length} individuals.

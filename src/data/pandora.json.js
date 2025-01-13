@@ -26,6 +26,7 @@ function getQuery(q) {
 const qInds = `SELECT
   I.Id,
   I.Full_Individual_Id,
+  I.Archaeological_ID,
   I.Creation_Date,
   S.Full_Site_Id,
   S.Name,
@@ -52,13 +53,15 @@ const qSamples = `SELECT
   Sa.Individual,
   Sa.Experiment_Date,
   TG.Name            AS TypeGroup,
-  T.Name             AS Type
+  T.Name             AS Type,
+  U.Name             AS Worker
 FROM      
              TAB_Sample     AS Sa
   INNER JOIN TAB_Type_Group AS TG ON Sa.Type_Group = TG.Id
   INNER JOIN TAB_Type       AS T  ON Sa.Type       = T.Id
   INNER JOIN TAB_Individual AS I  ON Sa.Individual = I.Id
   INNER JOIN TAB_Site       AS S  ON I.site        = S.Id
+  INNER JOIN TAB_User       AS U  ON Sa.Worker     = U.Id
 WHERE
   Sa.Deleted = 'false' AND (
   Sa.projects LIKE '%MICROSCOPE%' OR
@@ -71,12 +74,14 @@ const qExtracts = `SELECT
   E.Id,
   E.Full_Extract_Id,
   E.Sample,
-  E.Experiment_Date
+  E.Experiment_Date,
+  U.Name AS Worker
 FROM
              TAB_Extract    AS E
   INNER JOIN TAB_Sample     AS Sa ON E.sample      = Sa.Id
   INNER JOIN TAB_Individual AS I  ON Sa.individual = I.Id
   INNER JOIN TAB_Site       AS S  ON I.site        = S.Id
+  INNER JOIN TAB_User       AS U  ON E.Worker      = U.Id
 WHERE
   E.Deleted = 'false' AND (
   E.projects LIKE '%MICROSCOPE%' OR
@@ -93,7 +98,8 @@ const qLibraries = `SELECT
   L.Experiment_Date,
   P.Name,
   P.Library_UDG,
-  P.Library_Strandedness
+  P.Library_Strandedness,
+  U.Name AS Worker
 FROM
              TAB_Library  AS L
   INNER JOIN TAB_Protocol   AS P  ON L.Protocol    = P.Id 
@@ -101,6 +107,7 @@ FROM
   INNER JOIN TAB_Sample     AS Sa ON E.sample      = Sa.Id
   INNER JOIN TAB_Individual AS I  ON Sa.individual = I.Id
   INNER JOIN TAB_Site       AS S  ON I.site        = S.Id
+  INNER JOIN TAB_User       AS U  ON L.worker      = U.Id
 WHERE
   L.Deleted = 'false' AND (
   L.projects LIKE '%MICROSCOPE%' OR
@@ -118,7 +125,8 @@ const qCaptures = `SELECT
   C.Library,
   C.Experiment_Date,
   P.Name,
-  P.Short_Name
+  P.Short_Name,
+  U.Name AS Worker
 FROM
              TAB_Capture    AS C
   INNER JOIN TAB_Probe_Set  AS P ON C.Probe_Set    = P.Id
@@ -127,6 +135,7 @@ FROM
   INNER JOIN TAB_Sample     AS Sa ON E.sample      = Sa.Id
   INNER JOIN TAB_Individual AS I  ON Sa.individual = I.Id
   INNER JOIN TAB_Site       AS S  ON I.site        = S.Id
+  INNER JOIN TAB_User       AS U  ON C.worker      = U.Id
 WHERE
   C.Deleted = 'false' AND (
   C.projects LIKE '%MICROSCOPE%' OR
