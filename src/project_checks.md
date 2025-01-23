@@ -1,7 +1,15 @@
 # Project MICROSCOPE Checks
 
 ```js
-const sql = FileAttachment("./data/pandora.json").json().then(json => DuckDBClient.sql(json));
+import { loadEagerTableProcessed } from "./components/eager.js";
+```
+
+```js
+const pandoraTables = await FileAttachment("./data/pandora.json").json();
+const eagerTableProcessed = await loadEagerTableProcessed();
+Object.assign(pandoraTables, {eager: eagerTableProcessed});
+const sql = await DuckDBClient.sql(pandoraTables);
+
 ```
 
 Checking for samples whose individual is not there:
@@ -53,3 +61,20 @@ FROM
 WHERE
     C.Id IS NULL;
 ```
+
+Checking for Eager entities whose sequencings are not there:
+```sql id=eagerTable
+SELECT *
+FROM
+              eager       AS Ea
+    LEFT JOIN sequencings AS Se ON Ea.sample LIKE CONCAT(Se.Full_Sequencing_Id, '%')
+WHERE
+    Se.Id IS NULL AND
+    regexp_full_match(Ea.sample, '[A-Z]{3}[0-9]{3}\.[A-Z][0-9]{4}.[A-Z]{2}[0-9]\.[0-9].+')
+```
+
+```js
+view(Inputs.table(eagerTable))
+```
+
+Showing ${eagerTable.numRows} sequencings
